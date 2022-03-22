@@ -43,3 +43,11 @@ License: Apache-2.0
 Files: demoAppXsuaa/*
 Copyright: 2022 SAP SE or an SAP affiliate company and appgyver-auth-flows contributors
 License: Apache-2.0
+
+Files: images/*
+Copyright: 2022 SAP SE or an SAP affiliate company and appgyver-auth-flows contributors
+License: Apache-2.0
+
+Files: README.md
+Copyright: 2022 SAP SE or an SAP affiliate company and appgyver-auth-flows contributors
+License: Apache-2.0

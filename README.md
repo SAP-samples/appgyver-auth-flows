@@ -393,7 +393,7 @@ It is now necessary to add logic at the **page layout** level that generates the
 
 2.  Expand the logic modeler, add a **JavaScript** component to the canvas, and connect it to the **Page mounted event**.
 
-3.  Double-click the JS component and paste the code from [pkceCoding.js](./pkceCoding.js) into the JavaScript pane.
+3.  Double-click the JS component and paste the code from [pkceCoding.js](./appGyver/pkceCoding.js) into the JavaScript pane.
 
 4.  Add a property called **verifier** and another called **challenge** to Output 1. Set the value types to Text and click update.
 

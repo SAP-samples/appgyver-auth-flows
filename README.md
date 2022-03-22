@@ -13,7 +13,7 @@ Whereas the **blog post** covers the **theoretical basics** and reasons for usin
 
 **Important -** Before you continue with the actual setup of the scenario in your own landscape, please make sure to read the relevant blog post (click here) first. It will give you a good understanding of the architecture pattern and service requirements for the sample setup. 
 
-This GitHub repository consists of two major parts, which cover the setup of your SAP BTP subaccount and Identity Authentication instance and a detailed guide on how to configure your SAP AppGyver sample application.
+This GitHub repository consists of two major parts, which cover the setup of your SAP subaccount and Identity Authentication instance and a detailed guide on how to configure your SAP AppGyver sample application.
 
 **Authentication and authorization using the PKCE flow (SAP IAS and SAP XSUAA)**
 
@@ -803,7 +803,7 @@ Now that we can retrieve an access token using OAuth, we could stop here and sim
      ```
 
 11. Create an HTTP request and set the parameters as follows:
-    - **URL**: "https://`<btp subaccount subodmain>`.authentication.`<btp region>`.hana.ondemand.com/oauth/token?grant_type=refresh_token&client_id=`<client id>`&client_secret=`<client secret>`&refresh_token="+appVars.auth.refreshToken
+    - **URL**: "https://`<btp subaccount subdomain>`.authentication.`<btp region>`.hana.ondemand.com/oauth/token?grant_type=refresh_token&client_id=`<client id>`&client_secret=`<client secret>`&refresh_token="+appVars.auth.refreshToken
     - **HTTP method**: POST
     - **Headers**:
         - Header: Content-Type 

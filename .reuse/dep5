@@ -24,13 +24,22 @@ Disclaimer: The code in this project may include calls to APIs (“API Calls”)
  you any rights to use or access any SAP External Product, or provide any third
  parties the right to use of access any SAP External Product, through API Calls.
 
-
-Files: appgyver/*
+Files: appGyver/*
 Copyright: 2021 David Chambers
-           2013 webtoolkit.info Inc
-           2022 SAP SE or an SAP affiliate company and appgyver-auth-flows contributors
-License: Apache-2.0 and CC BY 2.0 UK
+License: Apache-2.0
 
-Files: demoApp/*, dempAppXsuaa/*, images/*
+Files: appGyver/*
+Copyright: 2013 webtoolkit.info Inc
+License: CC BY 2.0 UK
+
+Files: appGyver/*
+Copyright: 2022 SAP SE or an SAP affiliate company and appgyver-auth-flows contributors
+License: Apache-2.0
+
+Files: demoApp/*
+Copyright: 2022 SAP SE or an SAP affiliate company and appgyver-auth-flows contributors
+License: Apache-2.0
+
+Files: demoAppXsuaa/*
 Copyright: 2022 SAP SE or an SAP affiliate company and appgyver-auth-flows contributors
 License: Apache-2.0

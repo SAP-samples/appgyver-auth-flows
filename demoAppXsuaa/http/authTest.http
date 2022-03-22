@@ -1,0 +1,66 @@
+@xsuaaHostname = https://<SAP BTP Subaccount subdomain>.authentication.<SAP BTP Subaccount region>.hana.ondemand.com
+@xsuaaTokenEndpoint = /oauth/token
+@btpXsuaaClient = <SAP XSUAA service instance client ID>
+@btpXsuaaSecret = <SAP XSUAA service instance client secret>
+
+@capEndpoint = <CAP endpoint e.g., http://localhost:4004 (local testing))
+
+
+##########################################
+# Get SAP XSUAA token using Authorization Code
+##########################################
+
+##########################################
+# Get SAP XSUAA authorization code !in browser!
+# -> please adapt the <variables> to your settings
+# -> Copy and paste the request to your browser
+##########################################
+https://<SAP BTP Subaccount subdomain>.authentication.<SAP BTP Subaccount region>.hana.ondemand.com/oauth/authorize
+?client_id=<btpXsuaaClient>
+&scope=openid
+&redirect_uri=https%3A%2F%2Flocalhost%2F
+&response_type=code
+&state=state
+
+
+##########################################
+# Get SAP XSUAA token using authorization code
+##########################################
+
+# @name getXsuaaToken
+POST {{xsuaaHostname}}{{xsuaaTokenEndpoint}} HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{btpXsuaaClient}}
+&client_secret={{btpXsuaaSecret}}
+&code=<Authorization code from first call>
+&redirect_uri=https%3A%2F%2Flocalhost%2F
+&grant_type=authorization_code
+&state=state
+
+
+##########################################
+# Get SAP XSUAA refresh token
+##########################################
+
+@refresh_token = {{getXsuaaToken.response.body.$.refresh_token}}
+
+# @name getXsuaaToken
+POST {{xsuaaHostname}}{{xsuaaTokenEndpoint}} HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{btpXsuaaClient}}
+&client_secret={{btpXsuaaSecret}}
+&refresh_token={{refresh_token}}
+&grant_type=refresh_token
+
+
+##########################################
+# Call SAP CAP endpoint with SAP XSUAA token
+##########################################
+
+@access_token = {{getXsuaaToken.response.body.$.access_token}}
+
+# @name getCapResults
+GET {{capEndpoint}}/demo/User
+Authorization: Bearer {{access_token}}

@@ -1,7 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: [YOUR REPO NAME]
-Upstream-Contact: [YOUR EMAIL ADDRESS]
-Source: https://github.com/sap-samples/[YOUR REPO NAME]
+Upstream-Name: appgyver-auth-flows
+Upstream-Contact: martin.frick@sap.com
+Source: https://github.com/sap-samples/appgyver-auth-flows
 Disclaimer: The code in this project may include calls to APIs (“API Calls”) of
  SAP or third-party products or services developed outside of this project
  (“External Products”).
@@ -24,6 +24,13 @@ Disclaimer: The code in this project may include calls to APIs (“API Calls”)
  you any rights to use or access any SAP External Product, or provide any third
  parties the right to use of access any SAP External Product, through API Calls.
 
-Files: *
-Copyright: 2022 SAP SE or an SAP affiliate company and [YOUR REPO NAME] contributors
+
+Files: appgyver/*
+Copyright: 2021 David Chambers
+           2013 webtoolkit.info Inc
+           2022 SAP SE or an SAP affiliate company and appgyver-auth-flows contributors
+License: Apache-2.0 and CC BY 2.0 UK
+
+Files: demoApp/*, dempAppXsuaa/*, images/*
+Copyright: 2022 SAP SE or an SAP affiliate company and appgyver-auth-flows contributors
 License: Apache-2.0

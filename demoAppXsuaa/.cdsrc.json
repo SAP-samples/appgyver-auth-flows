@@ -1,0 +1,12 @@
+{
+    "requires": {
+        "[production]": {
+            "auth": {
+                "kind": "jwt-auth"
+            },
+            "uaa": {
+                "kind": "xsuaa"
+            }
+        }
+    }
+}

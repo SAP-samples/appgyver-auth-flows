@@ -1,0 +1,37 @@
+---
+_schema-version: '3.1'
+ID: demoAppXsuaa
+version: 1.0.0
+description: "A simple AppGyver App."
+parameters:
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx -p @sap/cds-dk cds build --production
+modules:
+  - name: demoAppXsuaa-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: demoAppXsuaa-uaa
+resources:
+  - name: demoAppXsuaa-uaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: demoAppXsuaa
+        tenant-mode: dedicated

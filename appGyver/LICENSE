@@ -1,0 +1,16 @@
+SHA265 Implementation
+http://www.webtoolkit.info/javascript-sha256.html#.Yg-2JN-ZOUn
+
+License
+http://www.webtoolkit.info/license1/index.html
+http://creativecommons.org/licenses/by/2.0/uk/
+Attribution 2.0 UK: England & Wales (CC BY 2.0 UK)
+
+-----------------------------------------------------------------
+
+Base64 btoa Polyfill Implementation
+https://github.com/davidchambers/Base64.js
+
+License
+https://github.com/davidchambers/Base64.js/blob/master/LICENSE
+Apache License 2.0

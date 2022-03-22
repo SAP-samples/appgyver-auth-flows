@@ -532,7 +532,7 @@ Once the service is deployed, use the following steps to access the secure endpo
 
     > **Hint** - To get the required access token, please repeat the steps required for the token exchange between SAP IAS and SAP XSUAA explained in one of the previous chapters. 
 
-4. Configure the **Base URL** to the demo CAP service at https://**CAP service url**/demo and save the resource.
+4. Configure the **Base URL** to the demo CAP service at https://`<CAP service url>`/demo and save the resource.
     > **Hint** - Make sure to deploy your SAP CAP service to your SAP BTP Subaccount as localhost will not be working here. 
 
     ![OData integration](images/19-OData-Integration.png)
@@ -633,7 +633,7 @@ Complete the following steps to create an SAP AppGyver mobile app that supports 
   7. Delete the login page.
   8. Select the **OAuth** page.
   9. Remove the default widgets and add a WebView component to the canvas. You will need to install it from the component market (note that WebView component only renders on mobile device).
-     - set URL property to: "https://`<btp subaccount subdomain>`.authentication.`<btp region>`.hana.ondemand.com/oauth/authorize?client_id=`<client id>`&scope=openid&redirect_uri=http://localhost/&response_type=code"
+     - set URL property to: "https://`<BTP Subaccount subdomain>`.authentication.`<BTP Subaccount region>`.hana.ondemand.com/oauth/authorize?client_id=`<client id>`&scope=openid&redirect_uri=http://localhost/&response_type=code"
      - Update the **btp subaccount subdomain**, **btp region** and **client id** values with the values of your SAP XSUAA instance service key.
      - Set layout of WebView to Width and Height > Advanced > Grow set to 1.
 
@@ -699,7 +699,7 @@ Complete the following steps to create an SAP AppGyver mobile app that supports 
             - **Assigned value**: Output value of another node > Function > code
 
       4.  Add an **HTTP Request** and connect it to the output node of the Set app variable function:
-          -  **URL**: "https://`<btp subaccount subdomain>`.authentication.**btp region**.hana.ondemand.com/oauth/token?grant_type=authorization_code&client_id=`<client id>`&client_secret=`<client secret>`&code="+outputs["Function"].code+"&redirect_uri=https%3A%2F%2Flocalhost%2F
+          -  **URL**: "https://`<BTP Subaccount subdomain>`.authentication.`<BTP Subaccount region>`.hana.ondemand.com/oauth/token?grant_type=authorization_code&client_id=`<client id>`&client_secret=`<client secret>`&code="+outputs["Function"].code+"&redirect_uri=https%3A%2F%2Flocalhost%2F
           -  **HTTP Method**: POST
           -  **Headers** (Custom List)**:**
               - header: Content-Type  
@@ -731,7 +731,7 @@ It is now necessary to add logic at the page layout level that generates the lin
 
 3. Set the variable **auth_with_xsuaa** to a formula. Set the following URL, disregard any validation errors related to web-url types and save:
 
-    "https://`<BTP subaccount subdomain>`.authentication.`<BTP region>`.hana.ondemand.com/oauth/authorize?client_id=`<client id>`&scope=openid&redirect_uri=https%3A%2F%2Flocalhost%2F&response_type=code"
+    "https://`<BTP Subaccount subdomain>`.authentication.`<BTP Subaccount region>`.hana.ondemand.com/oauth/authorize?client_id=`<client id>`&scope=openid&redirect_uri=https%3A%2F%2Flocalhost%2F&response_type=code"
 
     >**Important**:  Please **url-encode** your **client id**. You can use various online tools to do so. 
 
@@ -803,7 +803,7 @@ Now that we can retrieve an access token using OAuth, we could stop here and sim
      ```
 
 11. Create an HTTP request and set the parameters as follows:
-    - **URL**: "https://`<btp subaccount subodmain>`.authentication.`<btp region>`.hana.ondemand.com/oauth/token?grant_type=refresh_token&client_id=`<client id>`&client_secret=`<client secret>`&refresh_token="+appVars.auth.refreshToken
+    - **URL**: "https://`<BTP Subaccount subodmain>`.authentication.`<BTP Subaccount region>`.hana.ondemand.com/oauth/token?grant_type=refresh_token&client_id=`<client id>`&client_secret=`<client secret>`&refresh_token="+appVars.auth.refreshToken
     - **HTTP method**: POST
     - **Headers**:
         - Header: Content-Type 

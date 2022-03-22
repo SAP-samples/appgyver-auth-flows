@@ -193,7 +193,7 @@ An SAP XSUAA service instance is required for our scenario, as SAP CAP relies on
 
     >This service key is only used for testing purposes to do a manual token exchange. During deployment, a regular binding will be created between your SAP CAP application and this SAP XSUAA service instance.
 
-    ![XSUAA instance](./images/xsuaaInstance02.png)
+    ![XSUAA instance](./images/XsuaaInstance02.png)
 
 ### SAP IAS user group and role collection mapping
 
@@ -615,7 +615,7 @@ Complete the following steps to setup your SAP BTP environment for the  Authoriz
 
     >**Hint** - This service key will be used by SAP AppGyver for authentication purposes later. 
 
-    ![XSUAA instance](./images/xsuaaInstance02.png)
+    ![XSUAA instance](./images/XsuaaInstance02.png)
 
 
 ## SAP AppGyver configuration for OAuth 2.0 with Authorization Code flow

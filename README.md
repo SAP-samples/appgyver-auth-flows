@@ -51,6 +51,8 @@ This GitHub repository consists of two major parts, which cover the setup of you
 
 Complete the following steps to setup your SAP BTP and Identity Authentication environment for the required PKCE flow used by SAP AppGyver and the SAP XSUAA cross-consumption. 
 
+**Important** - Please be aware, that the XSUAA cross-consumption feature is just an intermediate solution allowing the usage of SAP XSUAA based services (like SAP CAP) by providing an SAP IAS access token. Follow the official roadmaps to see when an integration between SAP Identity Authentication and SAP CAP is available, replacing the need for a token exchange. 
+
 ### SAP XSUAA - SAP Identity Authentication trust
 
 1. Make sure a trust between you SAP BTP Subaccount (XSUAA) and your SAP Identity Authentication instance has been set up. Make sure you use the **Establish Trust** feature for this purpose instead of the manual configuration!

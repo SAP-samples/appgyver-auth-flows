@@ -1,8 +1,0 @@
-_schema-version: '3.1'
-ID: demoApp-small
-extends: demoApp
-
-modules:
- - name: demoApp-srv
-   build-parameters:
-     ignore: ["node_modules/"]

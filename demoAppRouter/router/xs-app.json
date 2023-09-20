@@ -1,0 +1,15 @@
+{
+    "welcomeFile": "/",
+    "authenticationMethod": "route",
+    "logout": {
+        "logoutEndpoint": "/do/logout"
+    },
+    "routes": [
+        {
+            "source": "^/api(.*)",
+            "target": "$1",
+            "destination": "srv-api",
+            "authenticationType": "ias"
+        }
+    ]
+}

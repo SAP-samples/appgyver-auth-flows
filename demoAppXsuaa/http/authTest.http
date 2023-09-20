@@ -2,13 +2,12 @@
 @xsuaaTokenEndpoint = /oauth/token
 @btpXsuaaClient = <SAP XSUAA service instance client ID>
 @btpXsuaaSecret = <SAP XSUAA service instance client secret>
-
 @capEndpoint = <CAP endpoint e.g., http://localhost:4004 (local testing))
 
 
-##########################################
+#################################################
 # Get SAP XSUAA token using Authorization Code
-##########################################
+#################################################
 
 ##########################################
 # Get SAP XSUAA authorization code !in browser!
@@ -18,7 +17,7 @@
 https://<SAP BTP Subaccount subdomain>.authentication.<SAP BTP Subaccount region>.hana.ondemand.com/oauth/authorize
 ?client_id=<btpXsuaaClient>
 &scope=openid
-&redirect_uri=https%3A%2F%2Flocalhost%2F
+&redirect_uri=http%3A%2F%2Flocalhost%2F
 &response_type=code
 &state=state
 
@@ -34,7 +33,7 @@ Content-Type: application/x-www-form-urlencoded
 client_id={{btpXsuaaClient}}
 &client_secret={{btpXsuaaSecret}}
 &code=<Authorization code from first call>
-&redirect_uri=https%3A%2F%2Flocalhost%2F
+&redirect_uri=http%3A%2F%2Flocalhost%2F
 &grant_type=authorization_code
 &state=state
 
@@ -62,5 +61,5 @@ client_id={{btpXsuaaClient}}
 @access_token = {{getXsuaaToken.response.body.$.access_token}}
 
 # @name getCapResults
-GET {{capEndpoint}}/demo/User
+GET {{capEndpoint}}/odata/v4/demo/User
 Authorization: Bearer {{access_token}}

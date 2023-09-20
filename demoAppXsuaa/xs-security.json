@@ -1,22 +1,41 @@
 {
   "xsappname": "demoAppXsuaa",
   "tenant-mode": "dedicated",
-  "scopes": [{
-    "name": "$XSAPPNAME.admin",
-    "description": "admin"
-  }],
+  "scopes": [
+      {
+          "name": "$XSAPPNAME.Admin",
+          "description": "Admin"
+      },
+      {
+          "name": "uaa.user",
+          "description": "UAA"
+      }
+  ],
   "attributes": [],
-  "role-templates": [{
-    "name": "admin",
-    "scope-references": [
-      "$XSAPPNAME.admin"
-    ],
-    "attribute-references": []
-  }],
+  "role-templates": [
+      {
+          "name": "Admin",
+          "description": "Admin",
+          "scope-references": ["$XSAPPNAME.Admin"]
+      },
+      {
+          "name": "Token_Exchange",
+          "description": "UAA Token Exchange",
+          "scope-references": ["uaa.user"]
+      }
+  ],
+  "role-collections": [
+      {
+          "name": "Demo App Xsuaa Admin",
+          "description": "Demo App Xsuaa Admin",
+          "role-template-references": ["$XSAPPNAME.Admin", "$XSAPPNAME.Token_Exchange"]
+      }
+  ],
   "oauth2-configuration": {
-    "redirect-uris": [
-      "http://localhost/",
-      "https://localhost/"
-    ]
+      "redirect-uris": [
+        "http*://localhost/",
+        "http*://localhost:4004/**", 
+        "https://*.cfapps.*.hana.ondemand.com/**"
+      ]
   }
 }

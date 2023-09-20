@@ -1,0 +1,91 @@
+@iasHostname = https://<SAP IAS instance>.accounts.ondemand.com
+@iasTokenEndpoint = /oauth2/token
+@iasClientId = <SAP IAS Client ID of public client>
+@iasClientSecret = <SAP IAS Client Secret of public client>
+@codeChallenge = <Code Challenge e.g., E8sZGg-49to1h5rPk5w6l0xKoMz5fhCTp_4Jm-tk3DA>
+@codeVerifier = <Code Verifier e.g., L6Fglaw13U76NKjVmKV5JcnSiD6fhOzOvIzRQKnQOFM>
+@xsuaaHostname = https://<SAP BTP Subaccount subdomain>.authentication.<SAP BTP Subaccount region>.hana.ondemand.com
+@btpXsuaaClient = <SAP XSUAA service instance client ID>
+@btpXsuaaSecret = <SAP XSUAA service instance client secret>
+@capEndpoint = <CAP endpoint e.g., http://localhost:4004 (local testing))
+
+
+##########################################
+# Get SAP IAS token using PKCE
+##########################################
+
+##########################################
+# Get SAP IAS authorization code in browser
+# (please adapt the <variables> to your settings)
+##########################################
+https://<SAP IAS instance>.accounts.ondemand.com/oauth2/authorize
+?client_id=<SAP IAS Client ID>
+&code_challenge=<Code Challenge>
+&code_challenge_method=S256
+&scope=openid
+&redirect_uri=http://localhost/
+&response_type=code
+&state=state
+
+
+#######################################################
+# Get "public" SAP IAS token using authorization code
+#######################################################
+
+# @name getPublicIasToken
+POST {{iasHostname}}{{iasTokenEndpoint}} HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{iasClientId}}
+&code=<Authorization Code>
+&redirect_uri=http://localhost/
+&grant_type=authorization_code
+&code_verifier={{codeVerifier}}
+
+
+##################################################
+# Get "private" SAP IAS token via token exchange
+##################################################
+
+@id_token_public = {{getPublicIasToken.response.body.$.id_token}}
+
+# @name doIasTokenExchange
+
+POST {{iasHostname}}{{iasTokenEndpoint}} HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{iasClientId}}
+&client_secret={{iasClientSecret}}
+&grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer
+&response_type=token+id_token
+&assertion={{id_token_public}}
+
+
+##########################################
+# Get SAP XSUAA token via token exchange
+##########################################
+
+@id_token_private = {{doIasTokenExchange.response.body.$.id_token}}
+
+# @name doXsuaaTokenExchange
+
+POST {{xsuaaHostname}}/oauth/token HTTP/1.1
+Accept: application/json
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{btpXsuaaClient}}
+&client_secret={{btpXsuaaSecret}}
+&grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer
+&response_type=token+id_token
+&assertion={{id_token_private}}
+
+
+##########################################
+# Call CAP endpoint with SAP IAS token
+##########################################
+
+@id_token_public = {{getPublicIasToken.response.body.$.access_token}}
+
+# @name getResults
+GET {{capEndpoint}}/odata/v4/demo/User
+Authorization: Bearer {{id_token_public}}

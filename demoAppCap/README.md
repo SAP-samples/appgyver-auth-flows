@@ -2,14 +2,16 @@
 
 npm install
 mbt build
-cf deploy mta_archives/demoAppXsuaa_1.0.0.mtar
+cf deploy mta_archives/demoApp_1.0.0.mtar
 
 
 # Hybrid testing
 
-cf create-service-key demoAppXsuaa-uaa demoAppXsuaa-uaa-key
+cf create-service-key demoApp-uaa demoApp-uaa-key
+cf create-service-key demoApp-ias demoApp-ias-key -c '{"credential-type":"X509_GENERATED"}' 
 
-cds bind -2 demoAppXsuaa-uaa --for hybrid
+cds bind -2 demoApp-uaa --for hybrid
+cds bind identity -2 demoApp-ias --kind identity --for hybrid
 
 
 # Getting Started
@@ -22,4 +24,3 @@ File or Folder | Purpose
 `srv/` | your service models and code go here
 `package.json` | project metadata and configuration
 `README.md` | this getting started guide
-

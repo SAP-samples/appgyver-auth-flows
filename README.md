@@ -1,19 +1,20 @@
 [![REUSE status](https://api.reuse.software/badge/github.com/SAP-samples/appgyver-auth-flows)](https://api.reuse.software/info/github.com/SAP-samples/appgyver-auth-flows)
 
-# SAP AppGyver and Proof Key for Code Exchange (PKCE) <br>**or** Striving for enterprise-grade security in SAP low-code applications
+# SAP Build Apps and Proof Key for Code Exchange (PKCE) <br>**or** Striving for enterprise-grade security in SAP low-code applications
+
+> **Important** - As SAP AppGyver has been re-branded to SAP Build Apps, some of the screenshots might still relate to the SAP AppGyver user interfaces. 
 
 # Introduction
+
 In this GitHub repository and the associated blog post (click here), we will demonstrate you how to:
 
 1. Configure a SAP Identity Authentication Service (IAS) application for public client usage and enabled for cross-consuming SAP XSUAA services.
-2. Create an SAP AppGyver application that implements OAuth 2.0 authorization and token flows with PKCE, from an iOS device
+2. Create an SAP Build Apps application that implements OAuth 2.0 authorization and token flows with PKCE, from an iOS device
 3. Manage access tokens and refresh tokens, and use them with a protected SAP Cloud Application Programming (CAP) service running in the SAP BTP, Cloud Foundry runtime
 
 Whereas the **blog post** covers the **theoretical basics** and reasons for using SAP Identity Authentication and the so-called PKCE flow for authentication and authorization requirements, this **GitHub repository** will provide you a **step-by-step guideance** on how to set up things on your own. 
 
-**Important -** Before you continue with the actual setup of the scenario in your own landscape, please make sure to read the relevant blog post (click here) first. It will give you a good understanding of the architecture pattern and service requirements for the sample setup. 
-
-This GitHub repository consists of two major parts, which cover the setup of your SAP subaccount and Identity Authentication instance and a detailed guide on how to configure your SAP AppGyver sample application.
+**Important -** Before you continue with the actual setup of the scenario in your own landscape, please make sure to read the relevant blog posts ([click here](https://blogs.sap.com/2022/03/22/sap-appgyver-and-proof-key-for-code-exchange-pkce-or-striving-for-enterprise-grade-security-in-sap-low-code-applications) and [here]()) first. They will give you a good understanding of the architecture pattern and service requirements for the sample setup. This GitHub repository consists of two major parts, which cover the setup of your SAP Subaccount and Identity Authentication instance and a detailed guide on how to configure your SAP Build Apps sample application.
 
 **Authentication and authorization using the PKCE flow (SAP IAS and SAP XSUAA)**
 
@@ -22,9 +23,10 @@ This GitHub repository consists of two major parts, which cover the setup of you
     - SAP Cloud Identity Services instance
     - SAP XSUAA service instance
     - SAP IAS user group and role collection mapping
+    - SAP IAS *public* to *private* token exchange
     - SAP IAS – SAP XSUAA token exchange
 
-- SAP AppGyver configuration for OAuth 2.0 with PKCE flow
+- SAP Build Apps configuration for OAuth 2.0 with PKCE flow
     - Initial app setup
     - OAuth configuration
     - PKCE implementation
@@ -37,7 +39,7 @@ This GitHub repository consists of two major parts, which cover the setup of you
 - SAP BTP security setup
     - SAP XSUAA service instance
 
-- SAP AppGyver configuration for OAuth 2.0 with Authorization Code grant flow
+- SAP Build Apps configuration for OAuth 2.0 with Authorization Code grant flow
     - Initial app setup
     - OAuth configuration
     - Authorization Code implementation
@@ -45,235 +47,276 @@ This GitHub repository consists of two major parts, which cover the setup of you
     - Utilize local device storage and refresh tokens
     - Access a SAP CAP service using Bearer token from token exchange
 
+
 # Authentication and authorization using the PKCE flow
+
+Complete the following steps to setup your SAP BTP and Identity Authentication environment for the required PKCE flow used by SAP Build Apps and the SAP XSUAA cross-consumption. 
+
+**Important** - Please be aware, that the XSUAA cross-consumption feature is just an intermediate solution allowing the usage of SAP XSUAA based services (like SAP CAP) by providing an SAP IAS access token. Follow the official roadmap to see when a native integration between SAP Identity Authentication and SAP CAP is available, replacing the need for a token exchange. 
+
 
 ## SAP BTP and SAP Identity Authentication security setup
 
-Complete the following steps to setup your SAP BTP and Identity Authentication environment for the required PKCE flow used by SAP AppGyver and the SAP XSUAA cross-consumption. 
-
-**Important** - Please be aware, that the XSUAA cross-consumption feature is just an intermediate solution allowing the usage of SAP XSUAA based services (like SAP CAP) by providing an SAP IAS access token. Follow the official roadmaps to see when an integration between SAP Identity Authentication and SAP CAP is available, replacing the need for a token exchange. 
-
 ### SAP XSUAA - SAP Identity Authentication trust
 
-1. Make sure a trust between you SAP BTP Subaccount (XSUAA) and your SAP Identity Authentication instance has been set up. Make sure you use the **Establish Trust** feature for this purpose instead of the manual configuration!
+1. Make sure a trust between you SAP BTP Subaccount (XSUAA) and your SAP Identity Authentication instance has been set up. Make sure you use the **Establish Trust** feature for this purpose instead of the manual configuration! Select the SAP Identity Authentication instance which you want to connect to your current SAP BTP Subaccount. After a few seconds, trust should be established successfully. 
 
     > **Hint –** This will only work if the customer ID associate with your SAP BTP Global account and your SAP Identity Authentication service match! More details on this step can be found in SAP Help.
 
-    ![Trust configuration](./images/establishTrust01.png)
+    [<img src="./images/establishTrust01.png" width="400" />](./images/establishTrust01.png?raw=true)
 
 
-2. Select the SAP Identity Authentication instance which you want to connect to your current SAP BTP Subaccount. After a few seconds, trust should be established successfully. 
+2. You should now see a new custom OpenID Connect trust between your SAP BTP Subaccount and your custom SAP IAS instance with the Origin Key **sap.custom**. SAP IAS can now act as trusted OpenID Connect identity provider for your SAP BTP Subaccount. 
 
-    >**Hint –** In case you cannot see your existing SAP IAS instance here, please open a support ticket to the component BC-IAM-IDS to make sure your instance is mapped to your SAP BTP environment based on your customer ID. 
-
-    ![Trust configuration](./images/establishTrust02.png)
+    [<img src="./images/establishTrust02.png" width="400" />](./images/establishTrust02.png?raw=true)
 
 
-3. You should now see a new custom OpenID Connect trust between your SAP BTP Subaccount and your custom SAP IAS instance with the Origin Key **sap.custom**. SAP IAS can now act as trusted OpenID Connect identity provider for your SAP BTP subaccount. 
+3. Login as an administrator to your SAP Identity Authentication service and open the **Applications** section. You should now see a new **Bundled Application** with following name syntax XSUAA-`<Subaccount Name>`. This application was created when you set up the trust between your SAP BTP Subaccount and and the SAP Identity Authentication service.
 
-    ![Trust configuration](./images/establishTrust03.png)
-
-4. Login as an administrator to your SAP Identity Authentication service and open the **Applications** overview. You should now see a new **Bundled Application** with following name syntax XSUAA-`<Subaccount Name>`. This application was created when you set up the trust between your SAP BTP Subaccount and and the SAP Identity Authentication service.
-
-    ![IAS XSUAA trust](./images/iasXsuaaTrust01.png)
+    [<img src="./images/iasXsuaaTrust01.png" width="400" />](./images/iasXsuaaTrust01.png?raw=true)
 
 
-5. You can check the details of this OpenID Connect application configuration in the respective sub-menus. Here you can for example see the redirect URLs leading back to your SAP BTP environment.
+4. You can check the details of this OpenID Connect application configuration in the respective sub-menus. Here you can for example see the redirect URLs leading back to your SAP BTP environment.
 
-    ![IAS XSUAA trust](./images/iasXsuaaTrust02.png)
+    [<img src="./images/iasXsuaaTrust02.png" width="400" />](./images/iasXsuaaTrust02.png?raw=true)
 
-    Well done, you’ve set up the required trust between your SAP BTP XSUAA environment and SAP Identity Authentication. In the next step you can make use of this trust and create a new application registration in SAP Identity Authentication using a dedicated SAP BTP service broker. A manual configuration within SAP IAS is not required anymore. 
+5. Well done, you’ve set up the required trust between your SAP BTP XSUAA environment and SAP Identity Authentication. In the next step you can make use of this trust and create a new application registration in SAP Identity Authentication using a dedicated SAP BTP service broker. A manual configuration within SAP IAS is not required anymore. 
+
+
+### Application Deployment
+
+Before we check out further details of the provided sample application, please start deploying it to your Cloud Foundry environment. To do so, just follow the next steps. The sample scenario can (theoretically) also be deployed to Kyma, by defining the respective Helm templates.  
+
+1. Clone the repository (if not done yet) and change into the **demoAppCap** directory. If you want to make use of an Application Router handling the additional token exchange, please use the **demoAppRouter** directory instead. 
+
+    ```sh
+    cd demoAppCap
+
+    or
+    
+    cd demoAppRouter
+    ```
+
+2. Install the required dependencies required for the build process.
+
+    ```sh
+    # Run in ./demoAppCap or ./demoAppRouter #
+    npm install
+    ```
+
+3. Build the Multi-Target Application Archive. 
+
+    ```sh
+    # Run in ./demoAppCap or ./demoAppRouter #
+    mbt build
+    ```
+
+4. Deploy the application to your dedicated Cloud Foundry Space. If required, login to SAP Cloud Foundry first.  
+
+    ```sh
+    # Run in ./demoAppCap or ./demoAppRouter #
+    cf deploy mta_archives/demoApp_1.0.0.mtar
+    ```
+
+5. After a few minutes the sample application should be up and running in your Cloud Foundry Space, including the required Service instances (demoApp-uaa and demoApp-ias). In case of errors, please ensure you have completed the Trust Configuration as explained before. 
 
 
 ### SAP Cloud Identity Services instance
 
-To simplify development and configuration, you can create new application registrations in SAP Identity Authentication also via a dedicated service broker of your SAP BTP subaccount. Please be aware this only works if an OIDC-based trust has been setup between SAP BTP subaccount and your SAP IAS instance. 
+To simplify development our **mta.yaml**-based deployment, will create new application registrations in SAP Identity Authentication via a dedicated service broker of your SAP BTP Subaccount. 
 
-1. Go to the Instances and Subscriptions menu of your SAP BTP Subaccount and create a new service instance of type **Cloud Identity Services** (identity). This service instance will create a corresponding application registration in SAP IAS. Select the **application** plan and give your service instance a reasonable name. You can e.g., name it **demoApp-ias**. Then click on **Next**.
+> **Important** Please be aware this only works if an OIDC-based trust has been setup between SAP BTP Subaccount and your SAP IAS instance. 
 
-    ![IAS instance](./images/iasInstance01.png)
+1. Check the configurations details this service instance in the resources section of your **mta.yaml** file.
 
-2. Provide the required configurations for your instance, which the service broker will use to create the corresponding application registration in SAP IAS. You can use the provided JSON file (see below) for the current sample use case. Once configured, please click on **Create**. 
 
-    ![IAS instance](./images/iasInstance02.png)
-
-    ```
-    {
-        "multi-tenant": true,
-        "xsuaa-cross-consumption": true,
-        "oauth2-configuration": {
-            "public-client": true,
-            "redirect-uris": [
-                "https://localhost/",
-                "http://localhost/"
-            ],
-            "token-policy": {
-                "refresh-parallel": 1,
-                "refresh-validity": 7776000,
-                "token-validity": 1800
-            }
-        }
-    }
+    ```yaml
+    display-name: Demo-App
+    oauth2-configuration:
+        public-client: true
+        redirect-uris: ["http://localhost/", "https://localhost/"]
+        grant-types: ["authorization_code_pkce_s256", "urn:ietf:params:oauth:grant-type:jwt-bearer"]
+        credential-types: ["x509","client_credentials"]
+    xsuaa-cross-consumption: true
+    multi-tenant: false
     ```
 
     Of special importance are the parameters described in the following. 
-    > For the other parameters please check the official documentation of the SAP Cloud Identity service if not self-explanatory (like validity of access and refresh tokens).
 
-    - **xsuaa-cross-consumption:**  true
-        >This will add the Client ID of the XSUAA application registration (which was created in IAS when you configured the trust between SAP BTP XSUAA and SAP IAS) to the Audience of the token issued by the new application registration created by the service broker. This setting is essential, as it will allow a token exchange from a token issued by SAP IAS to a corresponding token issued by SAP XSUAA. 
+    > **Hint** - For the other parameters please check the official documentation of the SAP Cloud Identity service if not self-explanatory (like validity of access and refresh tokens).
 
     - **public-client** : true
-        > This will make your new SAP IAS application registration used by AppGyver a public application. As a consequence, you can use the PKCE flow but no more Client Secrets can be created for this application anymore. 
+        > This will make your new SAP IAS application registration used by SAP Build Apps a public application. As a consequence, you can use the PKCE flow but no more Client Secrets can be created for this application anymore. 
 
     - **redirect-urls** : https://localhost/, http://localhost/
-        > Within SAP AppGyver we will extract the Authorization Code from the resulting redirect URL after the user has successfully authenticated against the SAP IAS application. For this process we use a WebComponent within SAP AppGyver and add a change event for the URL value of this component. Once the WebComponent URL changes to **localhost**, we can extract the required authorization code. More details on this approach will follow later or can be found in the following SAP AppGyver forum post ([click here](https://forums.appgyver.com/t/oauth2-registration-login-flow/215/19)).
+        > Within SAP Build Apps we will extract the Authorization Code from the resulting redirect URL after the user has successfully authenticated against the SAP IAS application. For this process we use a WebComponent within SAP Build Apps and add a change event for the URL value of this component. Once the WebComponent URL changes to **localhost**, we can extract the required authorization code. More details on this approach will follow later or can be found in the following SAP AppGyver forum post ([click here](https://forums.appgyver.com/t/oauth2-registration-login-flow/215/19)).
 
-      >**Hint -** In case you want to authenticate a user in the native mobile browser instead of a WebComponent (which is also possible), a redirect to your AppGyver app is required ([click here](https://forums.appgyver.com/t/oauth2-registration-login-flow/215/16) for more details). As SAP IAS can only redirect to **http** or **https** URL prefixes, this makes testing the app impossible. Whereas for a standalone build, a custom URL scheme (e.g., iOS [click here](https://developer.apple.com/documentation/xcode/defining-a-custom-url-scheme-for-your-app)) for redirects could be used, the SAPAppGyver test app relies on the **sapappgyverrn://** URL prefix for redirects.
+      >**Hint** - In case you want to authenticate a user in the native mobile browser instead of a WebComponent (which is also possible), a redirect to your SAP Build Apps app is required ([click here](https://forums.appgyver.com/t/oauth2-registration-login-flow/215/16) for more details). As SAP IAS can only redirect to **http** or **https** URL prefixes, this makes testing the app impossible. Whereas for a standalone build, a custom URL scheme (e.g., iOS [click here](https://developer.apple.com/documentation/xcode/defining-a-custom-url-scheme-for-your-app)) for redirects could be used, the SAP Build Apps test app relies on the **sapappgyverrn://** URL prefix for redirects.
+    
+    - **grant-types** : authorization_code_pkce_s256, urn:ietf:params:oauth:grant-type:jwt-bearer
+        > This will allow public clients to use the Authorization Code flow enforcing PKCE (S256) to access your CAP application. Additionally a JWT-Bearer grant is required to exchange the **public** SAP IAS JWT token to a **private** SAP IAS JWT token from your CAP application. 
+    
+    - **credential-types** : x509, client_credentials
+        > For programmatic access to the SAP IAS token endpoints required to exchange the **public** JWT token to a **private** JWT token, X.509 credentials are being used. Additionally, for testing purposes also the Client Credential usage has been enabled. This allows you to test the respective token exchange as part of the **http** test files in this repository. 
 
-3. It will take a while but once the service broker has finished its job, you can switch back to the SAP Identity Authentication service. Here you will see a new application registration, which was created based on your JSON configuration and is named like the corresponding service instance.
+    - **xsuaa-cross-consumption:**  true
+        > This will add the Client ID of the XSUAA application registration (which was created in IAS when you configured the trust between SAP BTP XSUAA and SAP IAS) to the Audience of the token issued by the new application registration created by the service broker. This setting is essential, as it will allow a token exchange from a token issued by SAP IAS to a corresponding token issued by SAP XSUAA. 
 
-    ![IAS instance](./images/iasInstance03.png)
+2. Once the deployment has finished, please switch to your SAP Identity Authentication service. Here you will see a new application registration, which was created based on the **mta.yaml** configuration and is named like the corresponding service instance.
 
-4. Select your new application registration and check out the settings. You can for example open the **Client ID, Secrets and Certificates** configuration. Here you will see that your application is serving **public clients**. This allows the usage of **PKCE** for the required authorization grants. 
+    [<img src="./images/iasInstance03.png" width="400" />](./images/iasInstance03.png?raw=true)
 
-    ![Public client](./images/publicClient01.png)
+3. Select your new application registration and check out the settings. You can for example open the **Client ID, Secrets and Certificates** configuration. Here you will see that your application is serving **public clients**. This allows the usage of **PKCE** for the required authorization grants. 
 
-    ![Public client](./images/publicClient02.png)
+    [<img src="./images/publicClient01.png" width="400" />](./images/publicClient01.png?raw=true)
 
-5. Another interesting aspect to check is the XSUAA cross-consumption capability, visible in the **Consumed Services** configuration. You can see that your new application **consumes** the application registration which was created when you set up the trust between your SAP IAS and SAP BTP environment (SAP XSUAA). 
+    [<img src="./images/publicClient02.png" width="400" />](./images/publicClient02.png?raw=true)
 
-    >**Hint –** As already explained, this will add the client ID of your SAP XSUAA related application registration (created by the trust setup) to the **Audience** parameter of access tokens issued for the app registration (supporting public clients) used by SAP AppGyver. 
+4. Another interesting aspect to check is the XSUAA cross-consumption capability, visible in the **Consumed Services** configuration. You can see that your new application **consumes** the application registration which was created when you set up the trust between your SAP IAS and SAP BTP environment (SAP XSUAA). 
 
-    >As SAP IAS (issuing the tokens) has been added as trusted identy provider to SAP XSUAA, this allows a token exchange from SAP IAS tokens to SAP XSUAA tokens. Therefore, the **JWT Bearer Token Grant** ([click here](https://docs.cloudfoundry.org/api/uaa/version/75.15.0/index.html#jwt-bearer-token-grant)) flow is used which follows RFC7523 ([click here](https://datatracker.ietf.org/doc/html/rfc7523)).
+    > **Hint** - As already explained, this will add the client ID of your SAP XSUAA related application registration (created by the trust setup) to the **aud** (Audience) parameter of access tokens issued for the app registration (supporting public clients) used by SAP Build Apps. 
 
-    ![Consumed services](./images/consServices01.png)
+    >As SAP IAS (issuing the tokens) has been added as trusted identity provider to SAP XSUAA, this allows a token exchange of SAP IAS tokens to SAP XSUAA tokens. Therefore, the **JWT Bearer Token Grant** ([click here](https://docs.cloudfoundry.org/api/uaa/version/75.15.0/index.html#jwt-bearer-token-grant)) flow is used which follows RFC7523 ([click here](https://datatracker.ietf.org/doc/html/rfc7523)).
 
-    ![Consumed services](./images/consServices02.png)
+    [<img src="./images/consServices01.png" width="400" />](./images/consServices01.png?raw=true)
+
+    [<img src="./images/consServices02.png" width="400" />](./images/consServices02.png?raw=true)
+
+
+5. As part of the **mta.yaml** definition we also defined a **default** service key, which you can use to test the sample setup. 
+
+    > **Hint** - This service key is only used for testing purposes to do a manual token exchange. During deployment, a regular binding will be created between your SAP CAP application and this SAP XSUAA service instance.
+
+    [<img src="./images/defaultKeyIas.png" width="400" />](./images/defaultKeyIas.png?raw=true)
+
 
 ### SAP XSUAA service instance
 
 An SAP XSUAA service instance is required for our scenario, as SAP CAP relies on SAP XSUAA for authorization handling. 
 
-1. That’s it, you can now authenticate against SAP IAS and use the issued token to access SAP BTP services secured by SAP XSUAA. We will test the token exchange in the next step. Before doing so, you need to create an SAP XSUAA service instance first. Make sure to choose the **application** plan. You can e.g., name your instance **demoApp-uaa** 
-
-    > **Hint** - If you choose a different name please also update the CAP project before deployment!
-
-    ![XSUAA instance](./images/xsuaaInstance01.png)
+1. You can now authenticate against SAP IAS and use the issued token to access SAP BTP services secured by SAP XSUAA. We will test the token exchange in the next step. Before doing so, let us analyze the XSUAA service instance configuration in your **mta.yaml** file. 
 
 2. This SAP XSUAA service instance will be bound to your SAP CAP application and allows your application to validate the token issued by SAP XSUAA in exchange for the initial SAP IAS token. 
 
     > **Hint** – You will not notice the exchange taking place. This feature is already integrated in to the **@sap/xssec** Node.js package which will recognize whether a token comes from SAP IAS or SAP XSUAA and trigger an exchange if necessary. 
 
-    Provide the following JSON file as configuration for your SAP XSUAA service instance. It will create an **admin role** for your application. Update the xsappname if required or keep the recommended **demoApp** value.
+   The provided **xs-security.json** file will create an **Demo App Admin** role for your application. 
 
     ```
-    {
-      "xsappname": "<App name e.g., demoApp>",
-      "tenant-mode": "dedicated",
-      "scopes": [{
-        "name": "$XSAPPNAME.admin",
-        "description": "admin"
-      }],
-      "attributes": [],
-      "role-templates": [{
-        "name": "admin",
-        "scope-references": [
-          "$XSAPPNAME.admin"
-        ],
-        "attribute-references": []
-      }],
-      "oauth2-configuration": {
-        "redirect-uris": [
-          "http://localhost/",
-          "https://localhost/"
-        ]
-      }
-    }
+    "xsappname": "demoApp",
+    "tenant-mode": "dedicated",
+    "scopes": [
+        {
+            "name": "$XSAPPNAME.Admin",
+            "description": "Admin"
+        }
+    ],
+    "attributes": [],
+    "role-templates": [
+        {
+            "name": "Admin",
+            "description": "Admin",
+            "scope-references": ["$XSAPPNAME.Admin"]
+        }
+    ],
+    "role-collections": [
+        {
+            "name": "Demo App Admin",
+            "description": "Demo App Admin",
+            "role-template-references": ["$XSAPPNAME.Admin"]
+        }
+    ]
     ```
 
-3. Once the SAP XSUAA service instance is created, create a new service key for testing purposes. You can e.g., name it **demoApp-uaa-key**. 
+3. As part of the **mta.yaml** definition we also defined a **default** service key, which you can use to test the sample setup. 
 
-    >This service key is only used for testing purposes to do a manual token exchange. During deployment, a regular binding will be created between your SAP CAP application and this SAP XSUAA service instance.
+    > This service key is only used for testing purposes to do a manual token exchange. During deployment, a regular binding will be created between your SAP CAP application and this SAP XSUAA service instance.
 
-    ![XSUAA instance](./images/XsuaaInstance02.png)
+    [<img src="./images/defaultKeyUaa.png" width="400" />](./images/defaultKeyUaa.png?raw=true)
+
 
 ### SAP IAS user group and role collection mapping
 
-1. Create a new User Group in SAP IAS and assign your future SAP AppGyver app users to that group. You can for example call the user group **DemoApp**. 
+1. Create a new User Group in SAP IAS and assign your future SAP Build Apps app users to that group. You can for example call the user group **DemoApp**. 
 
-    ![User group](./images/group01.png)
+    [<img src="./images/group01.png" width="400" />](./images/group01.png?raw=true)
 
+2. In your SAP BTP Subaccount, please find the **Demo App Admin** role-collection and create a **group mapping** for the SAP IAS user group you just created (e.g., **DemoApp**), so group members are assigned the relevant SAP XSUAA role collection automatically. 
 
-2. In your SAP BTP subaccount, create a new role collection (e.g., **DemoApp**) containing the **admin** role which was created when setting up the SAP XSUAA service instance for your SAP CAP application. 
-
-    In your role collection, create a **group mapping** for the SAP IAS user group you just created (e.g., **DemoApp**), so group members are assigned the relevant SAP XSUAA role collection automatically. 
-
-    ![User group](./images/group02.png)
+    [<img src="./images/group02.png" width="400" />](./images/group02.png?raw=true)
 
 
 ### SAP IAS – SAP XSUAA token exchange
 
-The provided GitHub repository contains a folder called **http**, which provides some sample requests to check your configuration before building things in SAP AppGyver. 
+The provided GitHub repository contains a folder called **http**, which provides some sample requests to check your configuration before building things in SAP Build Apps. 
 
-1. Open the **authTest.http** file in SAP Business Application Studio or Visual Studio Code (plugin required) to start the tests in your own environment. First update the **variable values** at the beginning of your file. 
+1. Copy the provided **authTest.http** file and rename it to **authTest-private.http**. This will ensure that no confidential values are committed to GitHub by accident. 
 
+2. Open the **authTest-private.http** file in SAP Business Application Studio or Visual Studio Code (plugin required) to start the tests in your own environment. First update the **variable values** at the beginning of your file. 
 
-   ![Auth test](./images/authTestVariables.png)
+   [<img src="./images/authTestVariables.png" width="400" />](./images/authTestVariables.png?raw=true)
 
-    - **iasHostname** : Your SAP IAS hostname e.g., https://customerxyz.accounts.ondemand.com
-    - **xsuaaHostname** : The hostname of your subaccount's XSUAA instance e.g., https://customerxyz-dev.authentication.eu10.hana.ondemand.com
-        > **Hint** - You can find this value using service key which you created for your SAP XSUAA service instance in one of the previous steps. 
+    - **iasHostname** : The SAP IAS hostname e.g., https://customerxyz.accounts.ondemand.com
+        > **Hint** - Use the **url** value in the **default** service-key of your **demoApp-ias** service instance. 
     - **iasTokenEndpoint** : Most probably **/oauth2/token**.
-    - **capiasClientId** : The client ID of your SAP IAS application registration.
-        > **Hint** - You can get the GUID value from the SAP IAS administration console.
+    - **iasClientId** : The client ID of your SAP IAS application registration.
+        > **Hint** - Use the **clientid** value in the **default** service-key of your **demoApp-ias** service instance. 
+    - **iasClientSecret** : The client ID of your SAP IAS application registration.
+        > **Hint** - Use the **clientsecret** value in the **default** service-key of your **demoApp-ias** service instance. 
     - **codeChallenge** : A SHA256 encrypted code challenge value.
-        > **Hint** - For testing you can use the provided code challenge or get a new PKCE code challenge value using available online tools.
+        > **Hint** - For testing you can use the **provided code challenge** or get a new PKCE code challenge value using available online tools.
     - **codeVerifier** : The unencrypted version of your code challenge value.
-        > **Hint** - For testing you can use the provided code verifier or get a new PKCE code verifier value using available online tools.
+        > **Hint** - For testing you can use the **provided code verifier** or get a new PKCE code verifier value using available online tools.
+    - **xsuaaHostname** : The hostname of your Subaccount's XSUAA instance e.g., https://customerxyz-dev.authentication.eu10.hana.ondemand.com
+        > **Hint** - Use the **url** value in the **default** service-key of your **demoApp-uaa** service instance. 
     - **btpXsuaaClient** : Your SAP XSUAA service instance client ID.
-        > **Hint** - You can find this value using service key which you created for your SAP XSUAA service instance in one of the previous steps. 
+        > **Hint** - Use the **clientid** value in the **default** service-key of your **demoApp-uaa** service instance. 
     - **btpXsuaaSecret** : Your SAP XSUAA service instance client secret
-        > **Hint** - You can find this value using service key which you created for your SAP XSUAA service instance in one of the previous steps.
-    - **capEndpoint** : The runtime URL of your SAP CAP service e.g., https://localhost:4004 for local testing
+        > **Hint** - Use the **clientsecret** value in the **default** service-key of your **demoApp-uaa** service instance. 
+    - **capEndpoint** : The runtime URL of your SAP CAP service e.g., https://localhost:4004 for local testing (demoAppCap)
+    - **routerEndpoint** : The runtime URL of your Approuter service e.g., https://localhost:5000 for local testing (demoAppRouter)
 
 
-2. Call the authorization endpoint of your SAP Identity Authentication instance in your local browser, after updating the below URL to your custom settings. 
+3. Call the authorization endpoint of your SAP Identity Authentication instance in your local browser, after updating the below URL to your custom settings. 
 
     https://`<iasHostname>`/oauth2/authorize?client_id=`<capiasClientId>`&code_challenge=`<codeChallenge>`&code_challenge_method=S256&scope=openid&redirect_uri=http://localhost/&response_type=code&state=state
 
     >**Hint** – We will not cover topics like the **state** or **nonce** parameter in this scenario ([click here](https://auth0.com/docs/secure/attack-protection/state-parameters)). Please use these parameters for additional security in your environment!
 
-3. After a successful login using your SAP IAS user credentials, you will be forwarded to a **localhost** url, which contains the required Authorization Code. Copy the code **value** from your address bar. 
+4. After a successful login using your SAP IAS user credentials, you will be forwarded to a **localhost** url, which contains the required Authorization Code. Copy the code **value** from your address bar. 
 
-    ![Auth Code](./images/authCodeUrl.png)
+    [<img src="./images/authCodeUrl.png" width="400" />](./images/authCodeUrl.png?raw=true)
 
-4. Go back to your **authTest.http** file and paste the code value which you just copied into the request named **getIasToken** as **code parameter**. Please be aware this authorization code is only **valid for a few minutes**! The rest of the parameters remains constant or is filled by your variables. Send the POST request to obtain an **id_token** and **access_token** from SAP IAS. 
+5. Go back to your **authTest.http** file and paste the code value which you just copied into the request named **getPublicIasToken** as **code parameter**. Please be aware this authorization code is only **valid for a few minutes**! The rest of the parameters remains constant or is filled by your variables. Send the POST request to obtain an **id_token** and **access_token** from SAP IAS. 
 
-    ![Use Auth Code](./images/authCodeInCall.png)
+    [<img src="./images/authCodeInCall.png" width="400" />](./images/authCodeInCall.png?raw=true)
 
-5. Feel free to decode the **id_token** (using an online decoder), which will result in something similar to the following. You can see, the relevant parameters for the upcoming token exchange like issuer (iss) and audience (aud), which contains the client ID of your SAP XSUAA application registration. This ID is also stored in your SAP XSUAA server as so-called relying party.
+6. This **public** SAP IAS token, now has to be exchanged for a **private** JWT token by executing the request named **doIasTokenExchange**. The respective **id_token** value of your **public** SAP IAS token will be injected automatically. Send the POST request to obtain an exchanged **id_token** and **access_token** from SAP IAS. 
 
-    ![Token Response](./images/tokenRes01.png)
+7. Feel free to decode the **id_token** (using an online decoder), which will result in something similar to the following. You can see, the relevant parameters for the upcoming token exchange like issuer (iss) and audience (aud), which contains the client ID of your SAP XSUAA application registration. This ID is also stored in your SAP XSUAA server as so-called relying party.
 
-6. Now you can trigger the token exchange of this SAP IAS token to a token issued by SAP XSUAA, using the request named **doXsuaaTokenExchange**. The parameters are either static or filled by the response of your previous request automatically (like the id_token). 
+    [<img src="./images/tokenRes01.png" width="400" />](./images/tokenRes01.png?raw=true)
 
-7. Decoding the resulting token issued by SAP XSUAA will result in something similar to the following. Without going into the details, you can see that the token is now issued by SAP XSUAA and contains additional SAP XSUAA specific information like attributes or role collections based on the group mapping which you've done in the previous chapter. 
+8. Now you can trigger the token exchange of this SAP IAS token to a token issued by SAP XSUAA, using the request named **doXsuaaTokenExchange**. The parameters are either static or filled by the response of your previous request automatically (like the id_token). 
+
+9.  Decoding the resulting token issued by SAP XSUAA will result in something similar to the following. Without going into the details, you can see that the token is now issued by SAP XSUAA and contains additional SAP XSUAA specific information like attributes or role collections based on the group mapping which you've done in the previous chapter. 
 
     >**Hint** - As already said, the **@sap/xssec** Node.js package is able to validate SAP IAS tokens automatically once your SAP CAP endpoints are called, so no manual token exchange is required. 
 
-    ![Token Response](./images/tokenRes02.png)
+    [<img src="./images/tokenRes02.png" width="400" />](./images/tokenRes02.png?raw=true)
 
-8. So if you are able to sucessfully run the manual token exchange, feel free to continue with the next chapter, that will explain how to implement things in SAP AppGyver. 
+10. So if you are able to successfully run the manual token exchange, feel free to continue with the next chapter, that will explain how to implement things in SAP Build Apps. 
 
-## SAP AppGyver configuration for OAuth 2.0 with PKCE flow
 
-Complete the following steps to create an SAP AppGyver mobile app that supports OAuth 2.0 with Proof Key for Code Exchange (PKCE) as authorization grant type.
+## SAP Build Apps configuration for OAuth 2.0 with PKCE flow
+
+Complete the following steps to create an SAP Build Apps mobile app that supports OAuth 2.0 with Proof Key for Code Exchange (PKCE) as authorization grant type.
 
 ### Initial app setup
 
   1. Run the LCNC Booster in SAP BTP (if not done yet).
 
-  2. Access SAP AppGyver from LCNC application lobby and create a new app called **demoApp**.
+  2. Access SAP Build Apps from LCNC application lobby and create a new app called **demoApp**.
 
   3. Create a page called **OAuth**.
 
@@ -296,7 +339,8 @@ Complete the following steps to create an SAP AppGyver mobile app that supports 
 
      - Set layout of WebView to Width and Height > Advanced > Grow set to 1.
 
-       ![WebView "can grow" setting](./images/1-can-grow.png)
+
+       [<img src="./images/1-can-grow.png" width="400" />](./images/1-can-grow.png?raw=true)
 
      - Set layout of WebView > Position > Align Self to Align this horizontally to the middle.
 
@@ -318,25 +362,25 @@ Complete the following steps to create an SAP AppGyver mobile app that supports 
          - idToken (text)
          - refreshToken (text)
 
-          ![Auth application variable](./images/2-auth-object.png)
+          [<img src="./images/2-auth-object.png" width="400" />](./images/2-auth-object.png?raw=true)
         
-  2.  Add 2 Üage variables to hold the PKCE relevant properties:
+  2.  Add 2 page variables to hold the PKCE relevant properties:
       - auth_with_pkce (web URL)
       - code_verifier (text)
 
-         ![PKCE page variables](images/6-page-vars.png)
+         [<img src="./images/6-page-vars.png" width="400" />](./images/6-page-vars.png?raw=true)
 
   3.  Save the application and go back to the **VIEW** screen.
 
   4.  Update the URL field of the WebView component to the newly created **auth_with_pkce** Page variable.
 
-       ![WebView URL](images/7-auth-with-pkce.png)
+       [<img src="./images/7-auth-with-pkce.png" width="400" />](./images/7-auth-with-pkce.png?raw=true)
 
   5.  Select the WebView component and expand the logic section from the bottom.
 
   6.  Install the HTTP request component from the flow function market.
 
-       ![HTTP request flow function](images/3-http-req.png)
+       [<img src="./images/3-http-req.png" width="400" />](./images/3-http-req.png?raw=true)
  
   7.  Configure each node as follows:
       1.  Add a **JavaScript function** and connect it to the Component **onLocationChange** event. Double-click it to open the JS editor and fill the required sections:
@@ -356,11 +400,12 @@ Complete the following steps to create an SAP AppGyver mobile app that supports 
              - code (text)
              - codeAvailable (text)
 
-          ![JS code](images/4-js-code.png)
+          [<img src="./images/4-js-code.png" width="400" />](./images/4-js-code.png?raw=true)
 
       2.  Add an **If condition** and connect it to the output node of the **JS > Output Value of another node > Function > codeAvailable**.
 
-            ![If condition](images/5-if-condition.png)
+            [<img src="./images/5-if-condition.png" width="400" />](./images/5-if-condition.png?raw=true)
+
       3.  Add a **Set app variable** function, connect it to the 1st node of the if condition, which is triggered on a truthy result and configure it like the following:
             - **Variable name:** auth.authCode
             - **Assigned value:** Output value of another node > Function > code
@@ -373,7 +418,7 @@ Complete the following steps to create an SAP AppGyver mobile app that supports 
               -  Value: application/x-www-form-urlencoded
           -  **Request Body Type:** x-www-form-urlencoded
 
-              ![HTTP request props](images/8-http-post.png)
+              [<img src="./images/8-http-post.png" width="400" />](./images/8-http-post.png?raw=true)
 
       5.  Add a **Dismiss initial view** component and connect it to the same output from Set app variable.
 
@@ -385,7 +430,8 @@ Complete the following steps to create an SAP AppGyver mobile app that supports 
 
   8.  Save the app before continuing and check that your logic flow looks something like this:
       
-      ![Logic flow WebView](images/9-webview-logic.png)
+      [<img src="./images/9-webview-logic.png" width="400" />](./images/9-webview-logic.png?raw=true)
+
 
 ### PKCE implementation
 
@@ -395,17 +441,17 @@ It is now necessary to add logic at the **page layout** level that generates the
 
 2.  Expand the logic modeler, add a **JavaScript** component to the canvas, and connect it to the **Page mounted event**.
 
-3.  Double-click the JS component and paste the code from [pkceCoding.js](./appGyver/pkceCoding.js) into the JavaScript pane.
+3.  Double-click the JS component and paste the code from [pkceCoding.js](./buildApps/pkceCoding.js) into the JavaScript pane.
 
 4.  Add a property called **verifier** and another called **challenge** to Output 1. Set the value types to Text and click update.
 
-    ![Polyfill JS](images/10-polyfill-js.png)
+    [<img src="./images/10-polyfill-js.png" width="400" />](./images/10-polyfill-js.png?raw=true)
 
 5. Add a **Set page variable** component and connect it to the output of the JS node.
 
 6. Set the variable name to **code_verifier** and assign the value **Function / verifier**.
 
-    ![Function / verifier](./images/11-functionverifier.png)
+    [<img src="./images/11-functionverifier.png" width="400" />](./images/11-functionverifier.png?raw=true)
 
 7. Add another **Set page variable** component and connect it to the JS output node as well.
 
@@ -417,42 +463,42 @@ It is now necessary to add logic at the **page layout** level that generates the
 
 9. Your flow logic should look similar to the image below. Save the application before proceeding.
 
-    ![PKCE flow logic](images/12-pkce-flow.png)
+    [<img src="./images/12-pkce-flow.png" width="400" />](./images/12-pkce-flow.png?raw=true)
 
 ### Add pages to display OAuth response and test
 
-This is the perfect time to test the logic that you have implemented in the previous steps. First, let's add new AppGyver pages and enable navigation, so that we can see the OAuth response and corresponding properties.
+This is the perfect time to test the logic that you have implemented in the previous steps. First, let's add new SAP Build Apps pages and enable navigation, so that we can see the OAuth response and corresponding properties.
 
 1. Click the page name **OAuth** in the top left corner under the application name. Add 2 new pages, **Start** and **Token**. Save the application.
 
 2. Select **Navigation**, add 2 items, and set the Label and Page values accordingly. Pick any icons that suit you. Make sure **navigation is enabled**, as below.
 
-    ![Navigation bar](images/13-navigation.png)
+    [<img src="./images/13-navigation.png" width="400" />](./images/13-navigation.png?raw=true)
 
 3. Access the **Start page**, update the title, and add some text fields to hold the authorization code and access token values. Set the value rows to **auth.authCode** and **auth.authToken** respectively.
 
-    ![Start screen](./images/14-start-screen.png)
+    [<img src="./images/14-start-screen.png" width="400" />](./images/14-start-screen.png?raw=true)
 
 4. Access the Token page, update the title, and add some text fields to hold the remaining properties, **refresh token**, **expires in**, and **id token**.
 
-    ![Token screen](images/15-token-screen.png)
+    [<img src="./images/15-token-screen.png" width="400" />](./images/15-token-screen.png?raw=true)
 
-5. Save the app if you haven't recently and select the launch option. You will need to install the **SAP AppGyver app** from the Apple **App Store** to take the next steps.
+5. Save the app if you haven't recently and select the launch option. You will need to install the **SAP Build Apps app** from the Apple **App Store** to take the next steps.
 
-6. Click **Reveal QR code** under Mobile Apps and scan it from the SAP AppGyver app.
+6. Click **Reveal QR code** under Mobile Apps and scan it from the SAP Build Apps app.
 
 7. Enter your logon credentials for the SAP IAS tenant. The process should look something like the below quick demo.
 
-    ![Auth demo flow](images/AuthAnimated15.gif)
+    [<img src="./images/AuthAnimated15.gif" width="400" />](./images/AuthAnimated15.gif?raw=true)
 
 
 ### Utilize local device storage and refresh tokens
 
 Now that we can retrieve an access token using the OAuth 2.0 PKCE flow, we could stop here and simply generate a new token with every call. However, it is a best practice to leverage the **refresh token** that can be used for a significantly longer period of time. Based on our configuration, an access token is good for 30 minutes and a refresh token is valid for 2.5 months!
 
-![Token validity period](./images/16-token-validity.png)
+[<img src="./images/16-token-validity.png" width="400" />](./images/16-token-validity.png?raw=true)
   
-To do this, we will use the **SAP AppGyver flow components** for getting or setting an item to **local storage**.
+To do this, we will use the **SAP Build Apps flow components** for getting or setting an item to **local storage**.
 
 1.  Access the **OAuth page** and select the WebView component. Expand the logic modeler.
 
@@ -464,7 +510,7 @@ To do this, we will use the **SAP AppGyver flow components** for getting or sett
 
 5.  Duplicate that component, connect it to the same output node as the previous step, set the item key to **refreshTimestamp** and the data to store as the formula **NOW()**.
 
-    ![Set item to storage](./images/17-set-item-storage.png)
+    [<img src="./images/17-set-item-storage.png" width="400" />](./images/17-set-item-storage.png?raw=true)
 
 6. Select the **Page Layout** where you add the following logic. The required steps will be described in detail. 
    - Get item from storage and retrieve the **refreshTimestamp** of the refresh token set in the previous step.
@@ -518,13 +564,14 @@ To do this, we will use the **SAP AppGyver flow components** for getting or sett
 
 16. Your logic flow should look something like this. Note that you can connect all **failure outputs** back to the **JavaScript** that invokes the **PKCE flow**. We only dismiss the Initial view when a Bearer token is acquired, either by the refresh token or a user login.
 
-    ![Refresh token logic flow](./images/18-final-flow-logic.png)
+
+    [<img src="./images/18-final-flow-logic.png" width="400" />](./images/18-final-flow-logic.png?raw=true)
 
 ### Access an SAP CAP service using a Bearer token from token exchange
 
 A sample SAP CAP service has been provided in [demoApp](./demoApp/) that you can deploy to test the E2E authentication and authorization flow. You can deploy it with the [usual steps](https://cap.cloud.sap/docs/guides/deployment/#build--assemble).
 
-Once the service is deployed, use the following steps to access the secure endpoint in SAP AppGyver:
+Once the service is deployed, use the following steps to access the secure endpoint in SAP Build Apps:
 
 1. Select the **DATA** tab and add a new OData integration.
 
@@ -537,7 +584,7 @@ Once the service is deployed, use the following steps to access the secure endpo
 4. Configure the **Base URL** to the demo CAP service at https://`<CAP service url>`/demo and save the resource.
     > **Hint** - Make sure to deploy your SAP CAP service to your SAP BTP Subaccount as localhost will not be working here. 
 
-    ![OData integration](images/19-OData-Integration.png)
+    [<img src="./images/19-OData-Integration.png" width="400" />](./images/19-OData-Integration.png?raw=true)
 
 5. Add a **new page** called **Data**, select it, and switch to toggle from **VIEW** to **VARIABLES** option.
 
@@ -545,17 +592,17 @@ Once the service is deployed, use the following steps to access the secure endpo
 
 7. Set the **Bearer token authentication** to a custom object and set the authentication token value to **auth.authToken** app variable.
 
-    ![Set bearer token](images/20-set-bearer-token.png)
+    [<img src="./images/20-set-bearer-token.png" width="400" />](./images/20-set-bearer-token.png?raw=true)
 
 8. Delete the automatic refresh timer from the logic section.
 
-    ![Data page](images/22-data-variable-logic.png)
+    [<img src="./images/22-data-variable-logic.png" width="400" />](./images/22-data-variable-logic.png?raw=true)
 
 9. Switch to the **View** pane.
 
 10. Add two text components and set the values to formula **data.User1[0].userId** and **data.User1[0].isAdmin** respectively.
     
-    ![Delete auto refresh](images/21-data-values.png)
+    [<img src="./images/21-data-values.png" width="400" />](./images/21-data-values.png?raw=true)
 
 11. Add the Data page to your navigation, save the application and preview it on your mobile device.
 
@@ -572,62 +619,133 @@ This is the end of the basic OAuth 2.0 PKCE flow implementation. From here, you 
 
 ## SAP BTP security setup
 
-Complete the following steps to setup your SAP BTP environment for the  Authorization Code flow used by SAP AppGyver. 
+Complete the following steps to setup your SAP BTP environment for the  Authorization Code flow used by SAP Build Apps. 
 
 **Important!** - This scenario is **not recommended** for a **productive environment**, as the client secret is stored on the device of your users and is send in HTTP requests to your SAP CAP application. Only use it for testing purposes! The Authorization Code grant flow is only suitable for scenarios in which the client is able to securely store the client secret like the backend of a web server. 
 
+### Application Deployment
+
+Please start by deploying it to your Cloud Foundry environment. To do so, just follow the next steps. The sample scenario can (theoretically) also be deployed to Kyma, by defining the respective Helm templates. 
+
+1. Clone the repository (if not done yet) and change into the **demoAppXsuaa** directory. 
+
+    ```sh
+    cd demoAppXsuaa
+    ```
+
+2. Install the required dependencies required for the build process.
+
+    ```sh
+    # Run in ./demoAppXsuaa #
+    npm install
+    ```
+
+3. Build the Multi-Target Application Archive. 
+
+    ```sh
+    # Run in ./demoAppXsuaa #
+    mbt build
+    ```
+
+4. Deploy the application to your dedicated Cloud Foundry Space. If required, login to SAP Cloud Foundry first.  
+
+    ```sh
+    # Run in ./demoAppXsuaa #
+    cf deploy mta_archives/demoAppXsuaa_1.0.0.mtar
+    ```
+
+5. After a few minutes the sample application should be up and running in your Cloud Foundry Space, including the required Service instances (demoAppXsuaa-uaa).
+
+
 ### SAP XSUAA service instance
 
-1. Ceate a new SAP XSUAA service instance which will be bound to your SAP CAP application and provides the required client credentials for accessing your OData service from SAP AppGyver. Make sure you choose the **application** plan. You can for example name your instance **demoAppXsuaa-uaa**.
+An SAP XSUAA service instance is required for our scenario, as SAP CAP relies on SAP XSUAA for authorization handling. 
 
-    > **Hint** - If you choose a different name please also update the CAP project before deployment!
+1. You can now authenticate against SAP XSUAA and use the issued token to access SAP BTP services secured by SAP XSUAA. Before doing so, let us analyze the XSUAA service instance configuration in your **mta.yaml** file. 
 
-    ![XSUAA instance](./images/xsuaaInstance01.png)
+2. This SAP XSUAA service instance will be bound to your SAP CAP application and allows your application to validate the token issued by SAP XSUAA during the Authorization Code flow. 
 
-2. This SAP XSUAA service instance will be bound to your SAP CAP application later and allows your application to evaluate the access token issued by SAP XSUAA after login. 
-
-    Provide the following JSON as service instance configuration. It will create an admin role for your application. Update the xsappname value if required.
+   The provided **xs-security.json** file will create an **Demo App Admin** role for your application. 
 
     ```
-    {
-      "xsappname": "<App name e.g., demoAppXsuaa>",
-      "tenant-mode": "dedicated",
-      "scopes": [{
-        "name": "$XSAPPNAME.admin",
-        "description": "admin"
-      }],
-      "attributes": [],
-      "role-templates": [{
-        "name": "admin",
-        "scope-references": [
-          "$XSAPPNAME.admin"
-        ],
-        "attribute-references": []
-      }],
-      "oauth2-configuration": {
-        "redirect-uris": [
-            "https://localhost/",
-            "http://localhost/"
-        ]
-      }
-    }
+    "xsappname": "demoAppXsuaa",
+    "tenant-mode": "dedicated",
+    "scopes": [
+        {
+            "name": "$XSAPPNAME.Admin",
+            "description": "Admin"
+        }
+    ],
+    "attributes": [],
+    "role-templates": [
+        {
+            "name": "Admin",
+            "description": "Admin",
+            "scope-references": ["$XSAPPNAME.Admin"]
+        }
+    ],
+    "role-collections": [
+        {
+            "name": "Demo App Xsuaa Admin",
+            "description": "Demo App Xsuaa Admin",
+            "role-template-references": ["$XSAPPNAME.Admin"]
+        }
+    ]
     ```
 
-3. Once the SAP XSUAA service instance is available, create a new service key which will be used by SAP AppGyver. You can name it **demoAppXsuaa-uaa-key** for example. 
+3. As part of the **mta.yaml** definition we also defined a **default** service key, which you can use to test the sample setup. 
 
-    >**Hint** - This service key will be used by SAP AppGyver for authentication purposes later. 
-
-    ![XSUAA instance](./images/XsuaaInstance02.png)
+    > This service key is only used for testing purposes to do a manual token exchange. During deployment, a regular binding will be created between your SAP CAP application and this SAP XSUAA service instance.
 
 
-## SAP AppGyver configuration for OAuth 2.0 with Authorization Code flow
+### SAP XSUAA Authorization Code Flow
 
-Complete the following steps to create an SAP AppGyver mobile app that supports OAuth 2.0 with Authorization Code flow. As already explained, this Authorization Grant type is not suitable for a productive setup, as the client secret is stored on the local device and is included in the HTTP requests to your SAP CAP application. 
+The provided GitHub repository contains a folder called **http**, which provides some sample requests to check your configuration before building things in SAP Build Apps. 
+
+1. Copy the provided **authTest.http** file and rename it to **authTest-private.http**. This will ensure that no confidential values are committed to GitHub by accident. 
+
+2. Open the **authTest-private.http** file in SAP Business Application Studio or Visual Studio Code (plugin required) to start the tests in your own environment. First update the **variable values** at the beginning of your file. 
+
+
+    - **xsuaaTokenEndpoint** : Most probably **/oauth/token**.
+    - **xsuaaHostname** : The hostname of your Subaccount's XSUAA instance e.g., https://customerxyz-dev.authentication.eu10.hana.ondemand.com
+        > **Hint** - Use the **url** value in the **default** service-key of your **demoApp-uaa** service instance. 
+    - **btpXsuaaClient** : Your SAP XSUAA service instance client ID.
+        > **Hint** - Use the **clientid** value in the **default** service-key of your **demoApp-uaa** service instance. 
+    - **btpXsuaaSecret** : Your SAP XSUAA service instance client secret
+        > **Hint** - Use the **clientsecret** value in the **default** service-key of your **demoApp-uaa** service instance. 
+    - **capEndpoint** : The runtime URL of your SAP CAP service e.g., https://localhost:4004 for local testing (demoAppXsuaa)
+
+
+3. Call the authorization endpoint of your SAP XSUAA instance in your local browser, after updating the below URL to your custom settings. 
+
+    https://`<SAP BTP Subaccount subdomain>`.authentication.`<SAP BTP Subaccount region>`.hana.ondemand.com/oauth/authorize?client_id=`<btpXsuaaClient>`&scope=openid&redirect_uri=http%3A%2F%2Flocalhost%2F&response_type=code&state=state
+
+    >**Hint** – We will not cover topics like the **state** or **nonce** parameter in this scenario ([click here](https://auth0.com/docs/secure/attack-protection/state-parameters)). Please use these parameters for additional security in your environment!
+
+4. After a successful login using your SAP XSUAA user credentials, you will be forwarded to a **localhost** url, which contains the required Authorization Code. Copy the code **value** from your address bar. 
+
+    [<img src="./images/authCodeUrl.png" width="400" />](./images/authCodeUrl.png?raw=true)
+
+5. Go back to your **authTest.http** file and paste the code value which you just copied into the request named **getXsuaaToken** as **code parameter**. Please be aware this authorization code is only **valid for a few minutes**! The rest of the parameters remains constant or is filled by your variables. Send the POST request to obtain an **id_token** and **access_token** from SAP XSUAA. 
+
+    [<img src="./images/authCodeInCallXsuaa.png" width="400" />](./images/authCodeInCallXsuaa.png?raw=true)
+
+6. Feel free to decode the **access_token** (using an online decoder), which will result in something similar to the following. Without going into the details, you can see that the token is issued by SAP XSUAA and contains additional SAP XSUAA specific information like attributes or role collections. 
+
+    [<img src="./images/tokenResXsuaa.png" width="400" />](./images/tokenResXsuaa.png?raw=true)
+
+7.  Feel free to continue with the next chapter, that will explain how to implement things in SAP Build Apps. 
+
+
+## SAP Build Apps configuration for OAuth 2.0 with Authorization Code flow
+
+Complete the following steps to create an SAP Build Apps mobile app that supports OAuth 2.0 with Authorization Code flow. As already explained, this Authorization Grant type is not suitable for a productive setup, as the client secret is stored on the local device and is included in the HTTP requests to your SAP CAP application. 
 
 ### Initial app setup
 
   1. Run the LCNC Booster in SAP BTP (if not done yet)
-  2. Access SAP AppGyver from LCNC application lobby and create a new app called **demoAppXsuaa**.
+  2. Access SAP Build Apps from LCNC application lobby and create a new app called **demoAppXsuaa**.
   3. Create a page called **OAuth**.
   4. Select **AUTH** and enable authentication for the app.
   5. Select **Direct third party authentication**.
@@ -636,10 +754,10 @@ Complete the following steps to create an SAP AppGyver mobile app that supports 
   8. Select the **OAuth** page.
   9. Remove the default widgets and add a WebView component to the canvas. You will need to install it from the component market (note that WebView component only renders on mobile device).
      - set URL property to: "https://`<BTP Subaccount subdomain>`.authentication.`<BTP Subaccount region>`.hana.ondemand.com/oauth/authorize?client_id=`<client id>`&scope=openid&redirect_uri=http://localhost/&response_type=code"
-     - Update the **btp subaccount subdomain**, **btp region** and **client id** values with the values of your SAP XSUAA instance service key.
+     - Update the **btp Subaccount subdomain**, **btp region** and **client id** values with the values of your SAP XSUAA instance service key.
      - Set layout of WebView to Width and Height > Advanced > Grow set to 1.
 
-       ![WebView "can grow" setting](./images/1-can-grow.png)
+       [<img src="./images/1-can-grow.png" width="400" />](./images/1-can-grow.png?raw=true)
 
      - Set layout of WebView > Position > Align Self to Align this horizontally to the middle.
   10. Select Page Layout element > Style > Check **Stretch to Viewport Height** and **Disable Scrolling**.
@@ -658,7 +776,7 @@ Complete the following steps to create an SAP AppGyver mobile app that supports 
          - idToken (text)
          - refreshToken (text)
 
-          ![Auth application variable](./images/2-auth-object.png)
+          [<img src="./images/2-auth-object.png" width="400" />](./images/2-auth-object.png?raw=true)
         
   2.  Add a Page variable named **auth_with_xsuaa** (web URL) to hold the relvant endpoint.
 
@@ -670,7 +788,7 @@ Complete the following steps to create an SAP AppGyver mobile app that supports 
 
   6.  Install the **HTTP request** component from the flow function market.
 
-       ![HTTP request flow function](images/3-http-req.png)
+       [<img src="./images/3-http-req.png" width="400" />](./images/3-http-req.png?raw=true)
  
   7.  Configure each node as follows:
       1.  Add a JavaScript function and connect it to the Component **onLocationChange event**. Double-click it to open the JS editor and fill the required sections:
@@ -690,11 +808,11 @@ Complete the following steps to create an SAP AppGyver mobile app that supports 
              - code (text)
              - codeAvailable (text)
 
-          ![JS code](images/4-js-code.png)
+          [<img src="./images/4-js-code.png" width="400" />](./images/4-js-code.png?raw=true)
 
       2.  Add an If condition and connect it to the output node of the JS > Output Value of another node > Function > codeAvailable
 
-            ![If condition](images/5-if-condition.png)
+            [<img src="./images/5-if-condition.png" width="400" />](./images/5-if-condition.png?raw=true)
 
       3.  Add a **Set app variable** function, connect it to the 1st node of the if condition, which is triggered on a truthy result, and configure it the following:
             - **Variable name**: auth.authCode
@@ -720,7 +838,7 @@ Complete the following steps to create an SAP AppGyver mobile app that supports 
 
   8.  Save the app before continuing and check that your logic flow looks something like this.
       
-      ![Logic flow WebView](images/9-webview-logic.png)
+      [<img src="./images/9-webview-logic.png" width="400" />](./images/9-webview-logic.png?raw=true)
 
 
 ### Authorization code grant implementation
@@ -739,33 +857,33 @@ It is now necessary to add logic at the page layout level that generates the lin
 
 ### Add pages to display OAuth response and test
 
-This is the perfect time to test the logic that you have implemented in the previous steps. First, let's add new AppGyver pages and enable navigation, so that we can see the OAuth response and corresponding properties.
+This is the perfect time to test the logic that you have implemented in the previous steps. First, let's add new SAP Build Apps pages and enable navigation, so that we can see the OAuth response and corresponding properties.
 
 1. Click the page name **OAuth** in the top left corner under the application name. Add 2 new pages, **Start** and **Token**. Save the application.
 
 2. Select Navigation, add 2 items, and set the Label and Page values accordingly. Pick any icons that suit you. Make sure navigation is enabled, as below.
 
-    ![Navigation bar](images/13-navigation.png)
+    [<img src="./images/13-navigation.png" width="400" />](./images/13-navigation.png?raw=true)
 
 3. Access the Start page, update the title, and add some text fields to hold the authorization code and access token values. Set the value rows to **auth.authCode** and **auth.authToken** respectively.
 
-    ![Start screen](./images/14-start-screen.png)
+    [<img src="./images/14-start-screen.png" width="400" />](./images/14-start-screen.png?raw=true)
 
 4. Access the **Token page**, update the title, and add some text fields to hold the remaining properties, **refresh token**, **expires in**, and **id token**.
 
-    ![Token screen](images/15-token-screen.png)
+    [<img src="./images/15-token-screen.png" width="400" />](./images/15-token-screen.png?raw=true)
 
-5. Save the app if you haven't recently and select the launch option. You will need to install the SAP AppGyver app from the Apple App Store to take the next steps.
+5. Save the app if you haven't recently and select the launch option. You will need to install the SAP Build Apps app from the Apple App Store to take the next steps.
 
-6. Click **Reveal QR code** under Mobile Apps and scan it from the SAP AppGyver app.
+6. Click **Reveal QR code** under Mobile Apps and scan it from the SAP Build Apps app.
 
 7. Enter the logon credentials of your SAP XSUAA tenant. If you haven't configured custom Identity Providers in your SAP BTP Subaccount, you can use your standard SAP logon credentials (e.g., email and password of P/S/I/D/...-user).
 
-    ![Auth demo flow](images/AuthAnimated15.gif)
+    [<img src="./images/AuthAnimated15.gif" width="400" />](./images/AuthAnimated15.gif?raw=true)
 
 ### Utilize local device storage and refresh tokens
 
-Now that we can retrieve an access token using OAuth, we could stop here and simply generate a new token with every call. However, it is a best practice to leverage the refresh token that can be used for a significantly longer period of time. To do this, we will use the SAP AppGyver flow components for getting or setting an item to local storage.
+Now that we can retrieve an access token using OAuth, we could stop here and simply generate a new token with every call. However, it is a best practice to leverage the refresh token that can be used for a significantly longer period of time. To do this, we will use the SAP Build Apps flow components for getting or setting an item to local storage.
 
 1.  Access the **OAuth page** and select the **WebView** component. Expand the **Logic** section.
 
@@ -777,7 +895,7 @@ Now that we can retrieve an access token using OAuth, we could stop here and sim
 
 5.  Duplicate that component, connect it to the same output node as the previous step, set the item key to **refreshTimestamp** and the **Data to store** as the formula **NOW()**.
 
-    ![Set item to storage](./images/17-set-item-storage.png)
+    [<img src="./images/17-set-item-storage.png" width="400" />](./images/17-set-item-storage.png?raw=true)
 
 6. Select the **Page Layout** and add the following logic. The details will be provided in the following steps. 
    - **Get item from storage** and retrieve the **refreshTimestamp** of the refresh token set in the previous step.
@@ -827,13 +945,13 @@ Now that we can retrieve an access token using OAuth, we could stop here and sim
 
 15. Your logic flow should look something like this. Note that you can connect all failure outputs to the selected **Set page variable** component, that sets the target of the WebComponent and starts the Authorization Code grant flow. We only dismiss the initial view when a Bearer token is acquired, either by the refresh token or a user login.
 
-    ![Refresh token logic flow](./images/xsuaaOAuthLogic.png)
+    [<img src="./images/xsuaaOAuthLogic.png" width="400" />](./images/xsuaaOAuthLogic.png?raw=true)
 
 ### Access an SAP CAP service using an SAP XSUAA Bearer token
 
 A sample SAP CAP service has been provided in [demoAppXsuaa](./demoAppXsuaa/) that you can deploy to test the E2E flow. You can deploy it with the [usual steps](https://cap.cloud.sap/docs/guides/deployment/#build--assemble). It provides an endpoint returning some parameters extracted from the user's current JWT token. 
 
-Once the service is deployed, use the following steps to access the secure endpoint in SAP AppGyver:
+Once the service is deployed, use the following steps to access the secure endpoint in SAP Build Apps:
 
 1. Select the **DATA** tab and add a new OData integration.
 
@@ -846,7 +964,7 @@ Once the service is deployed, use the following steps to access the secure endpo
 4. Configure the Base URL to the demo SAP CAP service at https://**CAP runtime url**/demo and save the resource.
     > **Hint** - Make sure to deploy the SAP CAP service to your SAP BTP Subaccount as localhost will not be working here. 
 
-    ![OData integration](images/19-OData-Integration.png)
+    [<img src="./images/19-OData-Integration.png" width="400" />](./images/19-OData-Integration.png?raw=true)
 
 5. Add a **new page** called **Data**, select it, and switch the toggle from **VIEW** to **VARIABLES** option.
 
@@ -854,17 +972,17 @@ Once the service is deployed, use the following steps to access the secure endpo
 
 7. Set the **Bearer token authentication** to a custom object and set the authentication token value to **auth.authToken** app variable.
 
-    ![Set bearer token](images/20-set-bearer-token.png)
+    [<img src="./images/20-set-bearer-token.png" width="400" />](./images/20-set-bearer-token.png?raw=true)
 
 8. Delete the automatic refresh timer from the logic section.
 
-    ![Data page](images/22-data-variable-logic.png)
+    [<img src="./images/22-data-variable-logic.png" width="400" />](./images/22-data-variable-logic.png?raw=true)
 
 9. Switch to the **View** pane.
 
 10. Add two text components and set the values to formula **data.User1[0].userId** and **data.User1[0].isAdmin** respectively.
     
-    ![Delete auto refresh](images/21-data-values.png)
+    [<img src="./images/21-data-values.png" width="400" />](./images/21-data-values.png?raw=true)
 
 11. Add the Data page to your navigation, save the application and preview it on your mobile device.
 
@@ -892,4 +1010,4 @@ For additional support, [ask a question in SAP Community](https://answers.sap.co
 If you wish to contribute code, offer fixes or improvements, please send a pull request. Due to legal reasons, contributors will be asked to accept a DCO when they create the first pull request to this project. This happens in an automated fashion during the submission process. SAP uses the standard DCO text of the Linux Foundation.
 
 ## License
-Copyright (c) 2022 SAP SE or an SAP affiliate company. All rights reserved. This project is licensed under the Apache Software License, version 2.0 except as noted otherwise in the [appGyver/LICENSE](appGyver/LICENSE) (for the polyfills used) or [LICENSE](LICENSE) file.
+Copyright (c) 2023 SAP SE or an SAP affiliate company. All rights reserved. This project is licensed under the Apache Software License, version 2.0 except as noted otherwise in the [buildApps/LICENSE](buildApps/LICENSE) (for the polyfills used) or [LICENSE](LICENSE) file.

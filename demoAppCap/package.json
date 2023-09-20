@@ -1,0 +1,56 @@
+{
+  "name": "demoApp",
+  "version": "1.0.0",
+  "description": "A simple AppGyver App.",
+  "repository": "https://github.com/SAP-samples/appgyver-auth-flows",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@sap/audit-logging": "^5.7.1",
+    "@sap/cds": "^7.2.0",
+    "@sap/xsenv": "^4.0.0",
+    "@sap/xssec": "^3.3.4",
+    "axios": "^1.5.0",
+    "cors": "^2.8.5",
+    "express": "^4",
+    "jwt-decode": "^3.1.2",
+    "node-cache": "^5.1.2",
+    "passport": "^0.6.0"
+  },
+  "scripts": {
+    "start": "cds-serve"
+  },
+  "prettier": {
+    "arrowParens": "always",
+    "tabWidth": 4,
+    "semi": true,
+    "singleQuote": false,
+    "trailingComma": "none",
+    "printWidth": 120
+  },
+  "eslintConfig": {
+    "extends": "eslint:recommended",
+    "env": {
+      "es2020": true,
+      "node": true,
+      "jest": true,
+      "mocha": true
+    },
+    "globals": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": true,
+      "DELETE": true,
+      "CREATE": true,
+      "DROP": true,
+      "CDL": true,
+      "CQL": true,
+      "CXL": true,
+      "cds": true
+    },
+    "rules": {
+      "no-console": "off",
+      "require-atomic-updates": "off"
+    }
+  }
+}

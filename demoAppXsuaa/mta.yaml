@@ -16,11 +16,13 @@ modules:
     type: nodejs
     path: gen/srv
     parameters:
-      buildpack: nodejs_buildpack
+      memory: 128MB
+      disk-quota: 256MB
+      command: node ./node_modules/@sap/cds/bin/cds-serve
     build-parameters:
       builder: npm-ci
     provides:
-      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+      - name: srv-api
         properties:
           srv-url: ${default-url}
     requires:
@@ -35,3 +37,5 @@ resources:
       config:
         xsappname: demoAppXsuaa
         tenant-mode: dedicated
+      service-keys:  
+        - name: default

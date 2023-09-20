@@ -5,7 +5,7 @@
                 "kind": "jwt-auth"
             }
         },
-        "[hybrid]": {
+        "[hybrid]" : {
             "auth": {
                 "kind": "jwt-auth"
             }

@@ -1000,14 +1000,16 @@ This is the end of the basic OAuth 2.0 Authorization Code flow using SAP XSUAA. 
 This project is a sample project including associated limitations and prerequisites. For this reason, the coding should not be seen as any kind of recommendation for a productive usage. We do not recommend to make use of any parts of this coding within a productive implementation without further review or validation by your own security experts! Especially concepts like using a **nonce** and/or **state** parameter have not been covered in this scenario. These parameters are essential in a productive environment besides the PKCE code challenge itself! 
 
 ## How to obtain support
-
 [Create an issue](https://github.com/SAP-samples/appgyver-auth-flows/issues) in this repository if you find a bug or have questions about the content.
  
 For additional support, [ask a question in SAP Community](https://answers.sap.com/questions/ask.html).
 
 ## Contributing
+If you wish to contribute code or offer fixes or improvements, please send a pull request. Check out our [contribution guide](CONTRIBUTING.md). Due to legal reasons, contributors will be asked to accept a DCO when they create the first pull request for this project. This happens in an automated fashion during the submission process. SAP uses [the standard DCO text of the Linux Foundation](https://developercertificate.org/).
 
-If you wish to contribute code, offer fixes or improvements, please send a pull request. Due to legal reasons, contributors will be asked to accept a DCO when they create the first pull request to this project. This happens in an automated fashion during the submission process. SAP uses the standard DCO text of the Linux Foundation.
+## Code of Conduct
+
+Please follow our [code of conduct](CODE_OF_CONDUCT.md).
 
 ## License
-Copyright (c) 2023 SAP SE or an SAP affiliate company. All rights reserved. This project is licensed under the Apache Software License, version 2.0 except as noted otherwise in the [buildApps/LICENSE](buildApps/LICENSE) (for the polyfills used) or [LICENSE](LICENSE) file.
+Copyright (c) 2023 SAP SE or an SAP affiliate company. All rights reserved. This project is licensed under the Apache Software License, version 2.0 except as noted otherwise in the [LICENSE](LICENSE) file.
